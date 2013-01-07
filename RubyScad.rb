@@ -2,7 +2,10 @@ module RubyScad
   CUBE_STR = "cube(size=[%<x>.2f, %<y>.2f, %<z>.2f], center=%<center>s);"
   SPHERE_STR = "sphere(r=%<r>.2f, $fa=%<fa>.2f, $fs=%<fs>.2f, $fn=%<fn>.2f, center=%<center>s);"
   CYLINDER_STR = "cylinder(h=%<h>.2f, r1=%<r1>.2f, r2=%<r2>.2f, $fa=%<fa>.2f, $fs=%<fs>.2f, center=%<center>s);"
-  POLYHEDRON_STR = "polyhedron(points=%<points>s, triangles=%<triangles>s, convexity=%<convexity>d, center=%<center>s);" 
+  POLYHEDRON_STR = "polyhedron(points=%<points>s, triangles=%<triangles>s, convexity=%<convexity>d, center=%<center>s);"
+  SQUARE_STR = "square(size=[%<x>.2f, %<y>.2f, %<z>.2f], center=%<center>s);"
+  CIRCLE_STR = "circle(r=%<r>.2f, $fa=%<fa>.2f, $fs=%<fs>.2f, $fn=%<fn>.2f, center=%<center>s);"
+  POLYGONE_STR = "polygon(points=%<points>s, pathes=%<paths>s, convexity=%<convexity>d, center=%<center>s);"
   TRANSLATE_STR = "translate([%<x>.2f, %<y>.2f, %<z>.2f])"
   ROTATE_STR = "rotate([%<x>.2f, %<y>.2f, %<z>.2f])"
   SCALE_STR = "scale([%<x>.2f, %<y>.2f, %<z>.2f])"
@@ -25,13 +28,40 @@ module RubyScad
   USE_STR = "use <%<file>s>"
   ECHO_STR = "echo(\"%<string>s\");"
   SURFACE_STR = "surface(file=\"%<file>s\", center=%<center>s, convexity=%<convexity>d);"
+  LINEAR_EXTRUDE_STR = "linear_extrude(height=%<height>.2f, center=%<center>s, convexity=%<convexity>d, twist=%<twist>d, slices=%<slices>d)"
+  ROTATE_EXTRUDE_STR = "rotate_extrude(center=%<center>s, convexity=%<convexity>d, slices=%<slices>d)"
+  PROJECTION_STR = "projection(cut=%<cut>s)"
+  
+  
   START_BLOCK = "{"
   END_BLOCK = "}"
-  
   TAB_SIZE = 3
+
+
   @@tab_level = 0
   @@output_file = "default.scad"
+
+  def projection(args={}, &block)
+    cut = args.fetch(:cut, false)
+    format_block PROJECTION_STR % {cut: cut}, &block
+  end
   
+  def linear_extrude(args={}, &block)
+    height = args.fetch(:height, 1)
+    center = args.fetch(:center, true)
+    convexity = args.fetch(:convexity, 10)
+    slices = args.fetch(:slices, 20)
+    twist = args.feetch(:twist, 0)
+    format_block LINEAR_EXTRUDE_STR % {height: height, center: center, convexity: convexity, slices: slices, twist: twist}, &block
+  end
+
+  def rotate_extrude(args={}, &block)
+    center = args.fetch(:center, true)
+    convexity = args.fetch(:convexity, 10)
+    slices = args.fetch(:slices, 20)
+    format_block ROTATE_EXTRUDE_STR % {center: center, convexity: convexity, slices: slices}, &block
+  end
+
   def echo(s, args={})
     format_output ECHO_STR % {string: s}
   end
@@ -117,6 +147,33 @@ module RubyScad
     convexity = args.fetch(:convexity, 0)
     center = args.fetch(:center, false)
     format_output POLYHEDRON_STR % {points: points, triangles: triangles, convexity: convexity, center: center}, &block
+  end
+
+  def square(args={}, &block)
+    x, y, z = vector_input(args.fetch(:size, [1,1,1]))
+    center = args.fetch(:center, false)
+    format_output SQARE_STR % {x: x, y: y, z: z, center: center}, &block
+  end
+
+  def circle(args={}, &block)
+    if args.include?(:d)
+      r = args[:d]/2.0
+    else
+      r = args.fetch(:r, 0.0)
+    end
+    fa = args.fetch(:fa, 12)
+    fs = args.fetch(:fs, 2)
+    fn = args.fetch(:fn, 0)
+    center = args.fetch(:center, false)
+    format_output CIRCLE_STR % {r: r, fa: fa, fs: fs, fn: fn, center: center}, &block
+  end
+
+  def polygon(args={}, &block)
+    paths = args.fetch(:paths, [])
+    points = args.fetch(:points, [])
+    convexity = args.fetch(:convexity, 0)
+    center = args.fetch(:center, false)
+    format_output POLYGON_STR % {points: points, paths: paths, convexity: convexity, center: center}, &block
   end
 
   def surface(args={}, &block)
