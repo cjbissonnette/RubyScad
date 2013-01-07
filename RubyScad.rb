@@ -1,4 +1,4 @@
-module ScadOutput
+module RubyScad
   CUBE_STR = "cube(size=[%<x>.2f, %<y>.2f, %<z>.2f], center=%<center>s);"
   SPHERE_STR = "sphere(r=%<r>.2f, $fa=%<fa>.2f, $fs=%<fs>.2f, $fn=%<fn>.2f, center=%<center>s);"
   CYLINDER_STR = "cylinder(h=%<h>.2f, r1=%<r1>.2f, r2=%<r2>.2f, $fa=%<fa>.2f, $fs=%<fs>.2f, center=%<center>s);"
@@ -72,20 +72,24 @@ module ScadOutput
     format_block HULL_STR, &block
   end
 
-  def background(&block)
-    format_block BACKGROUND_STR, &block
+  def background()
+    format_output BACKGROUND_STR
+    yield if block_given?
   end
 
-  def debug(&block)
-    format_block DEBUG_STR, &block
+  def debug()
+    format_output DEBUG_STR
+    yield if block_given?
   end
 
-  def root(&block)
-    format_block ROOT_STR, &block
+  def root()
+    format_output ROOT_STR
+    yield if block_given?
   end
 
-  def disable(&block)
-    format_block DISABLE_STR, &block
+  def disable()
+    format_output DISABLE_STR
+    yield if block_given?
   end
 
   def cube(args={}, &block)
@@ -191,7 +195,7 @@ module ScadOutput
   end
 
   def format_block(output_str)
-    format_output "#{output_str} #{START_BLOCK}\n"
+    format_output "#{output_str} #{START_BLOCK}"
     yield if  block_given?
     format_output "#{END_BLOCK}"
   end
@@ -201,15 +205,19 @@ module ScadOutput
   end
 
   def raw_output(str)
-    puts str
-    File.open(@@output_file, 'a') { |f| f.puts(str) }
+    print str
+    File.open(@@output_file, 'a') { |f| f.print(str) }
   end
 
   def format_output(str)
+    @@prev_output ||= ""
     str.lines do |l|
+      l.concat("\n") if l.match('[;\}\{]')
       @@tab_level-=1 if(l.include?('}')) && @@tab_level > 0
-      raw_output(space_string(l,@@tab_level))
+      l = space_string(l, @@tab_level) if @@prev_output.include?("\n") 
+      raw_output(l)
       @@tab_level+=1 if(l.include?('{'))
+      @@prev_output = l
     end
   end
 
