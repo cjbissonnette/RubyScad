@@ -1,10 +1,10 @@
 module RubyScad
-  CUBE_STR = "cube(size=[%<x>.2f, %<y>.2f, %<z>.2f], center=%<center>s);"
-  SPHERE_STR = "sphere(r=%<r>.2f, $fa=%<fa>.2f, $fs=%<fs>.2f, $fn=%<fn>.2f, center=%<center>s);"
-  CYLINDER_STR = "cylinder(h=%<h>.2f, r1=%<r1>.2f, r2=%<r2>.2f, $fa=%<fa>.2f, $fs=%<fs>.2f, center=%<center>s);"
+  CUBE_STR = "cube(size=[%<x>.3f, %<y>.3f, %<z>.3f], center=%<center>s);"
+  SPHERE_STR = "sphere(r=%<r>.3f, $fa=%<fa>.2f, $fs=%<fs>.2f, $fn=%<fn>.2f, center=%<center>s);"
+  CYLINDER_STR = "cylinder(h=%<h>.3f, r1=%<r1>.3f, r2=%<r2>.3f, $fa=%<fa>.2f, $fs=%<fs>.2f, $fn=%<fn>.2f, center=%<center>s);"
   POLYHEDRON_STR = "polyhedron(points=%<points>s, triangles=%<triangles>s, convexity=%<convexity>d, center=%<center>s);"
-  SQUARE_STR = "square(size=[%<x>.2f, %<y>.2f, %<z>.2f], center=%<center>s);"
-  CIRCLE_STR = "circle(r=%<r>.2f, $fa=%<fa>.2f, $fs=%<fs>.2f, $fn=%<fn>.2f, center=%<center>s);"
+  SQUARE_STR = "square(size=[%<x>.3f, %<y>.3f, %<z>.3f], center=%<center>s);"
+  CIRCLE_STR = "circle(r=%<r>.3f, $fa=%<fa>.2f, $fs=%<fs>.2f, $fn=%<fn>.2f, center=%<center>s);"
   POLYGONE_STR = "polygon(points=%<points>s, pathes=%<paths>s, convexity=%<convexity>d, center=%<center>s);"
   TRANSLATE_STR = "translate([%<x>.2f, %<y>.2f, %<z>.2f])"
   ROTATE_STR = "rotate([%<x>.2f, %<y>.2f, %<z>.2f])"
@@ -36,7 +36,7 @@ module RubyScad
   START_BLOCK = "{"
   END_BLOCK = "}"
   TAB_SIZE = 3
-
+  W = 0.001
 
   @@tab_level = 0
   @@output_file = "default.scad"
@@ -185,8 +185,8 @@ module RubyScad
 
   def cylinder(args={}, &block)
     if args.include?(:r)
-      r1 = r
-      r2 = r
+      r1 = args[:r]
+      r2 = args[:r]
     else
       r1 = args.fetch(:r1, 0.0)
       r2 = args.fetch(:r2, 0.0)
@@ -194,8 +194,9 @@ module RubyScad
     h = args.fetch(:h, 0.0)
     fa = args.fetch(:fa, 12)
     fs = args.fetch(:fs, 2)
+    fn = args.fetch(:fn, 0)
     center = args.fetch(:center, false)
-    format_output CYLINDER_STR % {r1: r1, r2: r2, h: h, fa: fa, fs: fs, center: center }, &block
+    format_output CYLINDER_STR % {r1: r1, r2: r2, h: h, fa: fa, fs: fs, fn: fn, center: center }, &block
   end
 
   def translate(args={}, &block)
