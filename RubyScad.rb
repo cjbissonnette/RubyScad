@@ -6,10 +6,10 @@ module RubyScad
   SQUARE_STR = "square(size=[%<x>.3f, %<y>.3f, %<z>.3f], center=%<center>s);"
   CIRCLE_STR = "circle(r=%<r>.3f, $fa=%<fa>.2f, $fs=%<fs>.2f, $fn=%<fn>.2f, center=%<center>s);"
   POLYGONE_STR = "polygon(points=%<points>s, pathes=%<paths>s, convexity=%<convexity>d, center=%<center>s);"
-  TRANSLATE_STR = "translate([%<x>.2f, %<y>.2f, %<z>.2f])"
-  ROTATE_STR = "rotate([%<x>.2f, %<y>.2f, %<z>.2f])"
-  SCALE_STR = "scale([%<x>.2f, %<y>.2f, %<z>.2f])"
-  MIRROR_STR = "mirror([%<x>.2f, %<y>.2f, %<z>.2f])"
+  TRANSLATE_STR = "translate([%<x>.3f, %<y>.3f, %<z>.3f])"
+  ROTATE_STR = "rotate([%<x>.3f, %<y>.3f, %<z>.3f])"
+  SCALE_STR = "scale([%<x>.3f, %<y>.3f, %<z>.3f])"
+  MIRROR_STR = "mirror([%<x>.3f, %<y>.3f, %<z>.3f])"
   MULTMATRIX_STR = "multmatrix(m=%<matrix>s)"
   COLOR_STR = "color([%<r>.1f, %<g>.1f, %<b>.1f, %<a>.1f])"
   COLOR_NAME_STR = "color(\"%<color>\")"
@@ -28,7 +28,7 @@ module RubyScad
   USE_STR = "use <%<file>s>"
   ECHO_STR = "echo(\"%<string>s\");"
   SURFACE_STR = "surface(file=\"%<file>s\", center=%<center>s, convexity=%<convexity>d);"
-  LINEAR_EXTRUDE_STR = "linear_extrude(height=%<height>.2f, center=%<center>s, convexity=%<convexity>d, twist=%<twist>d, slices=%<slices>d)"
+  LINEAR_EXTRUDE_STR = "linear_extrude(height=%<height>.3f, center=%<center>s, convexity=%<convexity>d, twist=%<twist>d, slices=%<slices>d)"
   ROTATE_EXTRUDE_STR = "rotate_extrude(center=%<center>s, convexity=%<convexity>d, slices=%<slices>d)"
   PROJECTION_STR = "projection(cut=%<cut>s)"
   
@@ -36,7 +36,7 @@ module RubyScad
   START_BLOCK = "{"
   END_BLOCK = "}"
   TAB_SIZE = 3
-  W = 0.001
+  PAD = 0.01
 
   @@tab_level = 0
   @@output_file = "default.scad"
