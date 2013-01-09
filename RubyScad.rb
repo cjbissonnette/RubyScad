@@ -263,7 +263,7 @@ module RubyScad
   end
 
   def new_line
-    raw_output "\n"
+    format_output "\n"
   end
 
   def start_block()
@@ -272,6 +272,10 @@ module RubyScad
 
   def end_block()
     format_output END_BLOCK
+  end
+
+  def end_all_blocks()
+    end_block while @@tab_level > 0
   end
 
   def space_string(str, tab_level)
