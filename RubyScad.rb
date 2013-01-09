@@ -1,4 +1,6 @@
 module RubyScad
+  VERSION = 1.0
+
   CUBE_STR = "cube(size=[%<x>.3f, %<y>.3f, %<z>.3f], center=%<center>s);"
   SPHERE_STR = "sphere(r=%<r>.3f, $fa=%<fa>.2f, $fs=%<fs>.2f, $fn=%<fn>.2f, center=%<center>s);"
   CYLINDER_STR = "cylinder(h=%<h>.3f, r1=%<r1>.3f, r2=%<r2>.3f, $fa=%<fa>.2f, $fs=%<fs>.2f, $fn=%<fn>.2f, center=%<center>s);"
@@ -37,9 +39,6 @@ module RubyScad
   END_BLOCK = "}"
   TAB_SIZE = 3
   PAD = 0.01
-
-  @@tab_level = 0
-  @@output_file = "default.scad"
 
   def projection(args={}, &block)
     cut = args.fetch(:cut, false)
@@ -122,13 +121,13 @@ module RubyScad
     yield if block_given?
   end
 
-  def cube(args={}, &block)
+  def cube(args={})
     x, y, z = vector_input(args.fetch(:size, [1,1,1]))
     center = args.fetch(:center, false)
-    format_output CUBE_STR % {x: x, y: y, z: z, center: center}, &block
+    format_output CUBE_STR % {x: x, y: y, z: z, center: center}
   end
 
-  def sphere(args={}, &block)
+  def sphere(args={})
     if args.include?(:d)
       r = args[:d]/2.0
     else
@@ -138,24 +137,24 @@ module RubyScad
     fs = args.fetch(:fs, 2)
     fn = args.fetch(:fn, 0)
     center = args.fetch(:center, false)
-    format_output SPHERE_STR % {r: r, fa: fa, fs: fs, fn: fn, center: center}, &block
+    format_output SPHERE_STR % {r: r, fa: fa, fs: fs, fn: fn, center: center}
   end
 
-  def polyhedron(args={}, &block)
+  def polyhedron(args={})
     triangles = args.fetch(:triangles, [])
     points = args.fetch(:points, [])
     convexity = args.fetch(:convexity, 0)
     center = args.fetch(:center, false)
-    format_output POLYHEDRON_STR % {points: points, triangles: triangles, convexity: convexity, center: center}, &block
+    format_output POLYHEDRON_STR % {points: points, triangles: triangles, convexity: convexity, center: center}
   end
 
-  def square(args={}, &block)
+  def square(args={})
     x, y, z = vector_input(args.fetch(:size, [1,1,1]))
     center = args.fetch(:center, false)
-    format_output SQARE_STR % {x: x, y: y, z: z, center: center}, &block
+    format_output SQARE_STR % {x: x, y: y, z: z, center: center}
   end
 
-  def circle(args={}, &block)
+  def circle(args={})
     if args.include?(:d)
       r = args[:d]/2.0
     else
@@ -165,25 +164,25 @@ module RubyScad
     fs = args.fetch(:fs, 2)
     fn = args.fetch(:fn, 0)
     center = args.fetch(:center, false)
-    format_output CIRCLE_STR % {r: r, fa: fa, fs: fs, fn: fn, center: center}, &block
+    format_output CIRCLE_STR % {r: r, fa: fa, fs: fs, fn: fn, center: center}
   end
 
-  def polygon(args={}, &block)
+  def polygon(args={})
     paths = args.fetch(:paths, [])
     points = args.fetch(:points, [])
     convexity = args.fetch(:convexity, 0)
     center = args.fetch(:center, false)
-    format_output POLYGON_STR % {points: points, paths: paths, convexity: convexity, center: center}, &block
+    format_output POLYGON_STR % {points: points, paths: paths, convexity: convexity, center: center}
   end
 
-  def surface(args={}, &block)
+  def surface(args={})
     file = args.fetch(:file, [])
     convexity = args.fetch(:convexity, 0)
     center = args.fetch(:center, false)
-    format_output SURFACE_STR % {file: file, convexity: convexity, center: center}, &block
+    format_output SURFACE_STR % {file: file, convexity: convexity, center: center}
   end
 
-  def cylinder(args={}, &block)
+  def cylinder(args={})
     if args.include?(:r)
       r1 = args[:r]
       r2 = args[:r]
@@ -196,7 +195,7 @@ module RubyScad
     fs = args.fetch(:fs, 2)
     fn = args.fetch(:fn, 0)
     center = args.fetch(:center, false)
-    format_output CYLINDER_STR % {r1: r1, r2: r2, h: h, fa: fa, fs: fs, fn: fn, center: center }, &block
+    format_output CYLINDER_STR % {r1: r1, r2: r2, h: h, fa: fa, fs: fs, fn: fn, center: center }
   end
 
   def translate(args={}, &block)
@@ -263,12 +262,16 @@ module RubyScad
   end
 
   def raw_output(str)
-    print str
-    File.open(@@output_file, 'a') { |f| f.print(str) }
+    if @@output_file
+      File.open(@@output_file, 'a') { |f| f.print(str) } 
+    else
+      print str
+    end
   end
 
   def format_output(str)
     @@prev_output ||= ""
+    @@tab_level ||= 0
     str.lines do |l|
       l.concat("\n") if l.match('[;\}\{]')
       @@tab_level-=1 if(l.include?('}')) && @@tab_level > 0
@@ -279,17 +282,22 @@ module RubyScad
     end
   end
 
-  def self.start_output(mod)
-    @@tab_level = 0
-    @@output_file = mod.name.concat ".scad"
-    File.open(@@output_file, 'w') { |f| f.puts("//file auto generated with rubyscad\n\n") }    
+  def self.start_output
+    @@output_file = ARGV[0]
+    if @@output_file
+      File.open(@@output_file, 'w') do |f|
+        f.puts "//script created with rubyscad #{VERSION}\n\n"
+      end
+    end
   end
 
   def self.extended(mod)
-    start_output(mod)
+    start_output
   end
 
   def self.included(mod)
-    start_output(mod)
+    start_output
   end
+
+  start_output if __FILE__== $0
 end
