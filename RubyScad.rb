@@ -252,9 +252,26 @@ module RubyScad
   end
 
   def format_block(output_str)
-    format_output "#{output_str} #{START_BLOCK}"
-    yield if  block_given?
-    format_output "#{END_BLOCK}"
+    format_output output_str.concat(' ')
+    if block_given?
+      start_block
+      yield
+      end_block
+    else
+      new_line
+    end
+  end
+
+  def new_line
+    raw_output "\n"
+  end
+
+  def start_block()
+    format_output START_BLOCK
+  end
+
+  def end_block()
+    format_output END_BLOCK
   end
 
   def space_string(str, tab_level)
