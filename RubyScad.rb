@@ -5,7 +5,7 @@ module RubyScad
   SPHERE_STR = "sphere(r=%<r>.3f, $fa=%<fa>.2f, $fs=%<fs>.2f, $fn=%<fn>.2f, center=%<center>s);"
   CYLINDER_STR = "cylinder(h=%<h>.3f, r1=%<r1>.3f, r2=%<r2>.3f, $fa=%<fa>.2f, $fs=%<fs>.2f, $fn=%<fn>.2f, center=%<center>s);"
   POLYHEDRON_STR = "polyhedron(points=%<points>s, triangles=%<triangles>s, convexity=%<convexity>d, center=%<center>s);"
-  SQUARE_STR = "square(size=[%<x>.3f, %<y>.3f, %<z>.3f], center=%<center>s);"
+  SQUARE_STR = "square(size=[%<x>.3f, %<y>.3f], center=%<center>s);"
   CIRCLE_STR = "circle(r=%<r>.3f, $fa=%<fa>.2f, $fs=%<fs>.2f, $fn=%<fn>.2f, center=%<center>s);"
   POLYGONE_STR = "polygon(points=%<points>s, pathes=%<paths>s, convexity=%<convexity>d, center=%<center>s);"
   TRANSLATE_STR = "translate([%<x>.3f, %<y>.3f, %<z>.3f])"
@@ -50,7 +50,7 @@ module RubyScad
     center = args.fetch(:center, true)
     convexity = args.fetch(:convexity, 10)
     slices = args.fetch(:slices, 20)
-    twist = args.feetch(:twist, 0)
+    twist = args.fetch(:twist, 0)
     format_block LINEAR_EXTRUDE_STR % {height: height, center: center, convexity: convexity, slices: slices, twist: twist}, &block
   end
 
@@ -61,7 +61,8 @@ module RubyScad
     format_block ROTATE_EXTRUDE_STR % {center: center, convexity: convexity, slices: slices}, &block
   end
 
-  def echo(s, args={})
+  def echo(*args)
+    s = args.join(", ")
     format_output ECHO_STR % {string: s}
   end
 
@@ -149,9 +150,9 @@ module RubyScad
   end
 
   def square(args={})
-    x, y, z = vector_input(args.fetch(:size, [1,1,1]))
+    x, y = vector_input(args.fetch(:size, [1, 1]))
     center = args.fetch(:center, false)
-    format_output SQARE_STR % {x: x, y: y, z: z, center: center}
+    format_output SQUARE_STR % {x: x, y: y, center: center}
   end
 
   def circle(args={})
@@ -202,8 +203,13 @@ module RubyScad
     vector_output TRANSLATE_STR, args, &block
   end
 
-  def rotate(args={}, &block)
-    vector_output ROTATE_STR, args, &block
+  def rotate(args={}, &block)    
+    if args.include?(:v)
+      x, y, z = args[:v].collect{ |v| v*args[:a]}
+    else
+      x, y, z = vector_input(args)
+    end
+    format_block ROTATE_STR % {x: x, y: y, z: z}, &block
   end
 
   def scale(args={}, &block)
@@ -238,7 +244,7 @@ module RubyScad
     if args.is_a? Array
       x, y, z = args
     elsif args.is_a? Numeric
-      x, y, z = [args,args,args]
+      x, y, z = [].fill(args, 0..2)
     elsif args.is_a? Hash
       if args.include?(:v)
         x, y, z = args[:v]
@@ -304,7 +310,11 @@ module RubyScad
   end
 
   def self.start_output
-    @@output_file = ARGV[0]
+    @@output_file = nil
+    if ARGV[0] && ARGV[0].include?(".scad")
+      @@output_file = ARGV[0]
+      ARGV.shift
+    end
     if @@output_file
       File.open(@@output_file, 'w') do |f|
         f.puts "//script created with rubyscad #{VERSION}\n\n"
@@ -320,5 +330,11 @@ module RubyScad
     start_output
   end
 
-  start_output if __FILE__== $0
+  start_output if __FILE__== $0  
+end
+
+class Numeric
+  def radians
+    self * Math::PI / 180
+  end
 end
