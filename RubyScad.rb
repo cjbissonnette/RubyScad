@@ -18,14 +18,14 @@ module RubyScad
   UNION_STR = "union()"
   DIFFERENCE_STR = "difference()"
   INTERSECTION_STR = "intersection()"
-  RENDER_STR = "render(convexity=%<convexity>%d)"
+  RENDER_STR = "render(convexity=%<convexity>d)"
   MINKOWSKI_STR = "minkowski()"
   HULL_STR = "hull()"
   BACKGROUND_STR = '%'
   DEBUG_STR = '#'
   ROOT_STR = '!'
   DISABLE_STR = '*'
-  IMPORT_STR = "import(\"%<file>s\");"
+  IMPORT_STR = "import(file=\"%<file>s\", layer=\"%<layer>s\", convexity=%<convexity>d, scale=%<scale>d);"
   INCLUDE_STR = "include <%<file>s>"
   USE_STR = "use <%<file>s>"
   ECHO_STR = "echo(\"%<string>s\");"
@@ -33,12 +33,29 @@ module RubyScad
   LINEAR_EXTRUDE_STR = "linear_extrude(height=%<height>.3f, center=%<center>s, convexity=%<convexity>d, twist=%<twist>d, slices=%<slices>d)"
   ROTATE_EXTRUDE_STR = "rotate_extrude(center=%<center>s, convexity=%<convexity>d, slices=%<slices>d)"
   PROJECTION_STR = "projection(cut=%<cut>s)"
-  
-  
+  DXF_CROSS_STR = "dxf_cross(file=\"%<file>s\", layer=\"%<layer>s\", origin=%<origin>s, scale=%<scale>d);"
+  DXF_DIM = "dxf_dim(file=\"%<file>s\", layer=\"%<layer>s\", origin=%<origin>s, scale=%<scale>d, name=\"%<name>s\");"
   START_BLOCK = "{"
   END_BLOCK = "}"
   TAB_SIZE = 3
   PAD = 0.01
+
+  def dxf_cross(args={})
+    file = args.fetch(:file, "")
+    layer = args.fetch(:layer, "")
+    origin = args.fetch(:origin, [0,0])
+    scale = args.fetch(:scale, 1)
+    format_output DXF_CROSS_STR % {file: file, layer: layer, origin: origin, scale: scale}
+  end
+
+  def dxf_dim(args={})
+    file = args.fetch(:file, "")
+    layer = args.fetch(:layer, "")
+    origin = args.fetch(:origin, [0,0])
+    scale = args.fetch(:scale, 1)
+    name = args.fetch(:name, "")
+    format_output DXF_DIM_STR % {file: file, name: name, layer: layer, origin: origin, scale: scale}
+  end
 
   def projection(args={}, &block)
     cut = args.fetch(:cut, false)
@@ -47,7 +64,7 @@ module RubyScad
   
   def linear_extrude(args={}, &block)
     height = args.fetch(:height, 1)
-    center = args.fetch(:center, true)
+    center = args.fetch(:center, false)
     convexity = args.fetch(:convexity, 10)
     slices = args.fetch(:slices, 20)
     twist = args.fetch(:twist, 0)
@@ -55,7 +72,7 @@ module RubyScad
   end
 
   def rotate_extrude(args={}, &block)
-    center = args.fetch(:center, true)
+    center = args.fetch(:center, false)
     convexity = args.fetch(:convexity, 10)
     slices = args.fetch(:slices, 20)
     format_block ROTATE_EXTRUDE_STR % {center: center, convexity: convexity, slices: slices}, &block
@@ -66,15 +83,21 @@ module RubyScad
     format_output ECHO_STR % {string: s}
   end
 
-  def import(file, args={})
-    format_output IMPORT_STR % {file: file}
+  def import(args={})
+    file = args.fetch(:file, "")
+    layer = args.fetch(:layer, "")
+    convexity = args.fetch(:convexity, 10)
+    scale = args.fetch(:scale, 1)
+    format_output IMPORT_STR % {file: file, layer: layer, convexity: convexity, scale: scale}
   end
 
-  def include(file, args={})
+  def include(args={})
+    file = args.fetch(:file, "")
     format_output INCLUDE_STR % {file: file}
   end
 
-  def use(file, args={})
+  def use(args={})
+    file = args.fetch(:file, "")
     format_output USE_STR % {file: file}
   end
 
@@ -90,7 +113,8 @@ module RubyScad
     format_block INTERSECTION_STR, &block
   end
 
-  def render(convexity=1, args={}, &block)
+  def render(args={}, &block)
+    convexity = args.fetch(:convexity, 1)
     format_block RENDER_STR % {convexity: convexity}, &block 
   end
 
@@ -207,6 +231,11 @@ module RubyScad
     if args.include?(:v)
       x, y, z = args[:v].collect{ |v| v*args[:a]}
     else
+      if args[:a].is_a? Array
+        args[:v] = args[:a]
+      elsif args[:a].is_a? Numeric
+        args = args[:a]
+      end
       x, y, z = vector_input(args)
     end
     format_block ROTATE_STR % {x: x, y: y, z: z}, &block
@@ -242,11 +271,13 @@ module RubyScad
 
   def vector_input(args={})
     if args.is_a? Array
+      args.fill(0.0, args.length, 3-args.length)
       x, y, z = args
     elsif args.is_a? Numeric
       x, y, z = [].fill(args, 0..2)
     elsif args.is_a? Hash
       if args.include?(:v)
+        args[:v].fill(0.0, args[:v].length, 3-args[:v].length)
         x, y, z = args[:v]
       else
         x = args.fetch(:x, 0)
