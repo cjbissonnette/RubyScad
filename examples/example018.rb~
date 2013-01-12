@@ -1,9 +1,12 @@
+load "../RubyScad.rb"
 
-module step(len, mod)
-{
-	for (i = [0:$children-1])
-		translate([ len*(i - ($children-1)/2), 0, 0 ]) child((i+mod) % $children);
-}
+module Example018
+  extend RubyScad
+
+  def self.step(len, mod)
+    for (i = [0:$children-1])
+      translate([ len*(i - ($children-1)/2), 0, 0 ]) child((i+mod) % $children)
+    end
 
 for (i = [1:4])
 {

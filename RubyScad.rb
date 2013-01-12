@@ -7,9 +7,10 @@ module RubyScad
   POLYHEDRON_STR = "polyhedron(points=%<points>s, triangles=%<triangles>s, convexity=%<convexity>d, center=%<center>s);"
   SQUARE_STR = "square(size=[%<x>.3f, %<y>.3f], center=%<center>s);"
   CIRCLE_STR = "circle(r=%<r>.3f, $fa=%<fa>.2f, $fs=%<fs>.2f, $fn=%<fn>.2f, center=%<center>s);"
-  POLYGONE_STR = "polygon(points=%<points>s, pathes=%<paths>s, convexity=%<convexity>d, center=%<center>s);"
+  POLYGON_STR = "polygon(points=%<points>s, pathes=%<paths>s, convexity=%<convexity>d, center=%<center>s);"
   TRANSLATE_STR = "translate([%<x>.3f, %<y>.3f, %<z>.3f])"
   ROTATE_STR = "rotate([%<x>.3f, %<y>.3f, %<z>.3f])"
+  ROTATE_STR_2D = "rotate(a=%<angle>.3f)"
   SCALE_STR = "scale([%<x>.3f, %<y>.3f, %<z>.3f])"
   MIRROR_STR = "mirror([%<x>.3f, %<y>.3f, %<z>.3f])"
   MULTMATRIX_STR = "multmatrix(m=%<matrix>s)"
@@ -228,17 +229,17 @@ module RubyScad
   end
 
   def rotate(args={}, &block)    
-    if args.include?(:v)
-      x, y, z = args[:v].collect{ |v| v*args[:a]}
+    if (!args[:v]) && (args[:a].is_a?(Numeric))
+      format_block ROTATE_STR_2D % {angle: args[:a]}
     else
-      if args[:a].is_a? Array
-        args[:v] = args[:a]
-      elsif args[:a].is_a? Numeric
-        args = args[:a]
+      if args.include?(:v)
+        x, y, z = args[:v].collect{ |v| v*args[:a]}
+      else
+        args[:v] = args[:a] if args[:a].is_a? Array
+        x, y, z = vector_input(args)
       end
-      x, y, z = vector_input(args)
+      format_block ROTATE_STR % {x: x, y: y, z: z}, &block
     end
-    format_block ROTATE_STR % {x: x, y: y, z: z}, &block
   end
 
   def scale(args={}, &block)
@@ -259,9 +260,14 @@ module RubyScad
     if color.is_a? String
       format_block COLOR_NAME_STR % {color:args}
     elsif color.is_a? Array
-      r, g, b, a = color
+      r, g, b, a = pad_fill(color, 4, 1.0)
       format_block COLOR_STR % {r: r, g: g, b: b, a: a}, &block
     end
+  end
+
+  def pad_fill(array, size, value)
+    (0..size).each { |v| array[v] = value unless array[v] }
+    array
   end
   
   def vector_output(string, args={}, &block)
@@ -339,6 +345,25 @@ module RubyScad
       @@prev_output = l
     end
   end
+
+  def lookup(x, points)
+    xmin, xmax = [0.0, 0.0]
+    points.keys.sort.reverse_each do |k|
+      if k <= x
+        xmin = k
+        break
+      end
+    end
+    points.keys.sort.each do |k|
+      if k >= x
+        xmax = k
+        break
+      end
+    end
+    return points[xmax] if x == xmax
+    return points[xmin] if x == xmin
+    return points[xmin] + (((x - xmin) * (points[xmax] - points[xmin])) / (xmax - xmin))
+end
 
   def self.start_output
     @@output_file = nil
