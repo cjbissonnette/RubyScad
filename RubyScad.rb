@@ -1,3 +1,5 @@
+require 'matrix'
+
 module RubyScad
   VERSION = 1.0
 
@@ -36,10 +38,42 @@ module RubyScad
   PROJECTION_STR = "projection(cut=%<cut>s)"
   DXF_CROSS_STR = "dxf_cross(file=\"%<file>s\", layer=\"%<layer>s\", origin=%<origin>s, scale=%<scale>d);"
   DXF_DIM = "dxf_dim(file=\"%<file>s\", layer=\"%<layer>s\", origin=%<origin>s, scale=%<scale>d, name=\"%<name>s\");"
+
   START_BLOCK = "{"
   END_BLOCK = "}"
   TAB_SIZE = 3
   PAD = 0.01
+
+  @@fa = 12
+  @@fs = 2
+  @@fn = 0
+  @@slices = 40
+  @@convexity = 10
+  @@center = false
+
+  def fa(value)
+    @@fa = value
+  end
+
+  def fs(value)
+    @@fs = value
+  end
+
+  def fn(value)
+    @@fn = value
+  end
+
+  def slices(value)
+    @@slices = value
+  end
+
+  def convexity(value)
+    @@convexity = value
+  end
+
+  def center(value)
+    @@center = value
+  end
 
   def dxf_cross(args={})
     file = args.fetch(:file, "")
@@ -65,17 +99,17 @@ module RubyScad
   
   def linear_extrude(args={}, &block)
     height = args.fetch(:height, 1)
-    center = args.fetch(:center, false)
-    convexity = args.fetch(:convexity, 10)
-    slices = args.fetch(:slices, 20)
+    center = args.fetch(:center, @@center)
+    convexity = args.fetch(:convexity, @@convexity)
+    slices = args.fetch(:slices, @@slices)
     twist = args.fetch(:twist, 0)
     format_block LINEAR_EXTRUDE_STR % {height: height, center: center, convexity: convexity, slices: slices, twist: twist}, &block
   end
 
   def rotate_extrude(args={}, &block)
-    center = args.fetch(:center, false)
-    convexity = args.fetch(:convexity, 10)
-    slices = args.fetch(:slices, 20)
+    center = args.fetch(:center, @@center)
+    convexity = args.fetch(:convexity, @@convexity)
+    slices = args.fetch(:slices, @@slices)
     format_block ROTATE_EXTRUDE_STR % {center: center, convexity: convexity, slices: slices}, &block
   end
 
@@ -149,7 +183,7 @@ module RubyScad
 
   def cube(args={})
     x, y, z = vector_input(args.fetch(:size, [1,1,1]))
-    center = args.fetch(:center, false)
+    center = args.fetch(:center, @@center)
     format_output CUBE_STR % {x: x, y: y, z: z, center: center}
   end
 
@@ -159,24 +193,24 @@ module RubyScad
     else
       r = args.fetch(:r, 0.0)
     end
-    fa = args.fetch(:fa, 12)
-    fs = args.fetch(:fs, 2)
-    fn = args.fetch(:fn, 0)
-    center = args.fetch(:center, false)
+    fa = args.fetch(:fa, @@fa)
+    fs = args.fetch(:fs, @@fs)
+    fn = args.fetch(:fn, @@fn)
+    center = args.fetch(:center, @@center)
     format_output SPHERE_STR % {r: r, fa: fa, fs: fs, fn: fn, center: center}
   end
 
   def polyhedron(args={})
     triangles = args.fetch(:triangles, [])
     points = args.fetch(:points, [])
-    convexity = args.fetch(:convexity, 0)
-    center = args.fetch(:center, false)
+    convexity = args.fetch(:convexity, @@convexity)
+    center = args.fetch(:center, @@center)
     format_output POLYHEDRON_STR % {points: points, triangles: triangles, convexity: convexity, center: center}
   end
 
   def square(args={})
     x, y = vector_input(args.fetch(:size, [1, 1]))
-    center = args.fetch(:center, false)
+    center = args.fetch(:center, @@center)
     format_output SQUARE_STR % {x: x, y: y, center: center}
   end
 
@@ -186,25 +220,25 @@ module RubyScad
     else
       r = args.fetch(:r, 0.0)
     end
-    fa = args.fetch(:fa, 12)
-    fs = args.fetch(:fs, 2)
-    fn = args.fetch(:fn, 0)
-    center = args.fetch(:center, false)
+    fa = args.fetch(:fa, @@fa)
+    fs = args.fetch(:fs, @@fs)
+    fn = args.fetch(:fn, @@fn)
+    center = args.fetch(:center, @@center)
     format_output CIRCLE_STR % {r: r, fa: fa, fs: fs, fn: fn, center: center}
   end
 
   def polygon(args={})
     paths = args.fetch(:paths, [])
     points = args.fetch(:points, [])
-    convexity = args.fetch(:convexity, 0)
-    center = args.fetch(:center, false)
+    convexity = args.fetch(:convexity, @@convexity)
+    center = args.fetch(:center, @@center)
     format_output POLYGON_STR % {points: points, paths: paths, convexity: convexity, center: center}
   end
 
   def surface(args={})
     file = args.fetch(:file, [])
-    convexity = args.fetch(:convexity, 0)
-    center = args.fetch(:center, false)
+    convexity = args.fetch(:convexity, @@convexity)
+    center = args.fetch(:center, @@center)
     format_output SURFACE_STR % {file: file, convexity: convexity, center: center}
   end
 
@@ -213,14 +247,14 @@ module RubyScad
       r1 = args[:r]
       r2 = args[:r]
     else
-      r1 = args.fetch(:r1, 0.0)
-      r2 = args.fetch(:r2, 0.0)
+      r1 = args.fetch(:r1, 1.0)
+      r2 = args.fetch(:r2, 1.0)
     end
-    h = args.fetch(:h, 0.0)
-    fa = args.fetch(:fa, 12)
-    fs = args.fetch(:fs, 2)
-    fn = args.fetch(:fn, 0)
-    center = args.fetch(:center, false)
+    h = args.fetch(:h, 1.0)
+    fa = args.fetch(:fa, @@fa)
+    fs = args.fetch(:fs, @@fs)
+    fn = args.fetch(:fn, @@fn)
+    center = args.fetch(:center, @@center)
     format_output CYLINDER_STR % {r1: r1, r2: r2, h: h, fa: fa, fs: fs, fn: fn, center: center }
   end
 
@@ -276,15 +310,14 @@ module RubyScad
   end
 
   def vector_input(args={})
-    if args.is_a? Array
-      args.fill(0.0, args.length, 3-args.length)
-      x, y, z = args
+    if args.is_a?(Array) or args.is_a?(Vector)
+      x, y, z = pad_fill(args.to_a, 3, 0)
     elsif args.is_a? Numeric
       x, y, z = [].fill(args, 0..2)
     elsif args.is_a? Hash
       if args.include?(:v)
         args[:v].fill(0.0, args[:v].length, 3-args[:v].length)
-        x, y, z = args[:v]
+        x, y, z = pad_fill(args[:v].to_a, 3, 0)
       else
         x = args.fetch(:x, 0)
         y = args.fetch(:y, 0)
