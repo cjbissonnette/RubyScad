@@ -26,9 +26,8 @@ module Example009
   intersection() {
     linear_extrude(height: fanwidth, center: true, convexity: 10, twist: -fanrot)
     import(file: "example009.dxf", layer: "fan_top")
-		
-    rotate_extrude(origin: fan_side_center, convexity: 10)
-    import(file: "example009.dxf", layer: "fan_side")
+
+    rotate_extrude(file: "example009.dxf", layer: "fan_side", origin: fan_side_center, convexity: 10)
   }
 end
 

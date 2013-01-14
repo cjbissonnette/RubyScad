@@ -19,8 +19,7 @@ module Example007
 
   def self.clip()
     difference() {
-      rotate_extrude(convexity: 3)
-      import(file: "example007.dxf", layer: "dorn")
+      rotate_extrude(convexity: 3, file: "example007.dxf", layer: "dorn")
       [0, 90].each { |r| rotate(z: r); cutout() }
     }
   end

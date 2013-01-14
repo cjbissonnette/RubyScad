@@ -33,11 +33,9 @@ module RubyScad
   USE_STR = "use <%<file>s>"
   ECHO_STR = "echo(\"%<string>s\");"
   SURFACE_STR = "surface(file=\"%<file>s\", center=%<center>s, convexity=%<convexity>d);"
-  LINEAR_EXTRUDE_STR = "linear_extrude(height=%<height>.3f, center=%<center>s, convexity=%<convexity>d, twist=%<twist>d, slices=%<slices>d)"
-  ROTATE_EXTRUDE_STR = "rotate_extrude(center=%<center>s, convexity=%<convexity>d, slices=%<slices>d)"
+  LINEAR_EXTRUDE_STR = "linear_extrude(height=%<height>.3f, center=%<center>s, convexity=%<convexity>d, twist=%<twist>d, slices=%<slices>d, file=\"%<file>s\", layer=\"%<layer>s\")"
+  ROTATE_EXTRUDE_STR = "rotate_extrude(center=%<center>s, convexity=%<convexity>d, slices=%<slices>d, file=\"%<file>s\", layer=\"%<layer>s\")"
   PROJECTION_STR = "projection(cut=%<cut>s)"
-  DXF_CROSS_STR = "dxf_cross(file=\"%<file>s\", layer=\"%<layer>s\", origin=%<origin>s, scale=%<scale>d);"
-  DXF_DIM = "dxf_dim(file=\"%<file>s\", layer=\"%<layer>s\", origin=%<origin>s, scale=%<scale>d, name=\"%<name>s\");"
 
   START_BLOCK = "{"
   END_BLOCK = "}"
@@ -50,6 +48,7 @@ module RubyScad
   @@slices = 40
   @@convexity = 10
   @@center = false
+  @@floating_precision = ".3f"
 
   def fa(value)
     @@fa = value
@@ -76,20 +75,11 @@ module RubyScad
   end
 
   def dxf_cross(args={})
-    file = args.fetch(:file, "")
-    layer = args.fetch(:layer, "")
-    origin = args.fetch(:origin, [0,0])
-    scale = args.fetch(:scale, 1)
-    format_output DXF_CROSS_STR % {file: file, layer: layer, origin: origin, scale: scale}
+    return 0.0
   end
 
   def dxf_dim(args={})
-    file = args.fetch(:file, "")
-    layer = args.fetch(:layer, "")
-    origin = args.fetch(:origin, [0,0])
-    scale = args.fetch(:scale, 1)
-    name = args.fetch(:name, "")
-    format_output DXF_DIM_STR % {file: file, name: name, layer: layer, origin: origin, scale: scale}
+    return 0.0
   end
 
   def projection(args={}, &block)
@@ -103,14 +93,21 @@ module RubyScad
     convexity = args.fetch(:convexity, @@convexity)
     slices = args.fetch(:slices, @@slices)
     twist = args.fetch(:twist, 0)
-    format_block LINEAR_EXTRUDE_STR % {height: height, center: center, convexity: convexity, slices: slices, twist: twist}, &block
+    file = args.fetch(:file, "")
+    layer = args.fetch(:layer, "")
+    str_end = file == "" ? "" : ";"
+    format_block LINEAR_EXTRUDE_STR.concat(str_end) % {height: height, center: center, convexity: convexity, slices: slices, twist: twist, file: file, layer: layer}, &block
+    
   end
 
   def rotate_extrude(args={}, &block)
     center = args.fetch(:center, @@center)
     convexity = args.fetch(:convexity, @@convexity)
     slices = args.fetch(:slices, @@slices)
-    format_block ROTATE_EXTRUDE_STR % {center: center, convexity: convexity, slices: slices}, &block
+    file = args.fetch(:file, "")
+    layer = args.fetch(:layer, "")
+    str_end = file == "" ? "" : ";"
+    format_block ROTATE_EXTRUDE_STR.concat(str_end) % {center: center, convexity: convexity, slices: slices, file: file, layer: layer}, &block
   end
 
   def echo(*args)
@@ -334,7 +331,7 @@ module RubyScad
       yield
       end_block
     else
-      new_line
+      new_line unless output_str.include?(';')
     end
   end
 
