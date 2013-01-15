@@ -4,7 +4,7 @@ module Example021
   extend RubyScad
 
   def self.thing()
-    fa(30)
+    fa 30
     difference() {
       sphere(r: 25)
       cylinder(h: 62.5, r1: 12.5, r2: 6.25, center: true)
