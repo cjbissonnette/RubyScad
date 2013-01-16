@@ -69,7 +69,7 @@ module RubyScad
     format_output FN_STR % {value: value}
   end
 
-  def include(file)
+  def include_scad(file)
     format_output INCLUDE_STR % {file: file}
   end
 

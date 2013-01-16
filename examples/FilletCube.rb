@@ -137,7 +137,7 @@ class FilletCube < ChamferCube
           translate(y: value+PAD, z: value+PAD) {
             fillet_cube([x+2.0*PAD, value*2.0+PAD, value*2.0+PAD])
           }
-          rotate(y: 90) { fillet_cylinder(x+4*PAD,value) }
+          rotate(x: 90) { fillet_cylinder(x+4*PAD,value) }
         }
       }
     when 9
@@ -155,7 +155,7 @@ class FilletCube < ChamferCube
           translate(y: value+PAD, z: -value-PAD) {
             fillet_cube([x+2.0*PAD, value*2.0+PAD, value*2.0+PAD])
           }
-          rotate(y: 90) { fillet_cylinder(x+4*PAD,value) }
+          rotate(x: 90) { fillet_cylinder(x+4*PAD,value) }
         }
       }
     when 11
@@ -312,7 +312,6 @@ class FilletCube < ChamferCube
   end
 end
 
-cube = FilletCube.new(size:[5, 7, 8], center: true)
-cube.fillet_side(1, 1)
-cube.fillet_side(0, 1)
-cube.render
+#cube = FilletCube.new(size:[5, 7, 8], center: true)
+#cube.fillet_sides([[0,1], [1,1], [2,1], [3,1], [4,1], [5,1]])
+#cube.render
