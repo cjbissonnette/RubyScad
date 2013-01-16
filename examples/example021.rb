@@ -3,8 +3,10 @@ load "../RubyScad.rb"
 module Example021
   extend RubyScad
 
+  fa 30
+
   def self.thing()
-    fa 30
+    
     difference() {
       sphere(r: 25)
       cylinder(h: 62.5, r1: 12.5, r2: 6.25, center: true)
@@ -17,7 +19,8 @@ module Example021
 
   def self.demo_proj()
     linear_extrude(center: true, height: 0.5)
-    projection(cut: false); thing()
+    projection(cut: false)
+    thing()
     background; thing()
   end
 

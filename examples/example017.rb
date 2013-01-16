@@ -56,18 +56,18 @@ class Example017
       translate(v: [ x5, y1 ])
       square(size: [ @boltlen - @thickness, @thickness*2 ])
 	
-      translate([ x5 + @boltlen - @thickness, y2 ]); circle(r:@thickness)
+      translate(v: [ x5 + @boltlen - @thickness, y2 ]); circle(r:@thickness)
       
       translate(v: [ x2, y2 ])
       intersection() {
         circle(r: @thickness);
-        translate([ -@thickness*2, 0 ]); square(size: @thickness*2)
+        translate(v: [ -@thickness*2, 0 ]); square(size: @thickness*2)
       }
       
       translate(v: [ x8, y5 ])
       intersection() {
         circle(r: @thickness);
-        translate([ -@thickness*2, 0 ]); square(size: @thickness*2)
+        translate(v: [ -@thickness*2, 0 ]); square(size: @thickness*2)
       }
     }
   end
@@ -113,7 +113,7 @@ class Example017
     shape_inner_disc()
     linear_extrude(height: @thickness, convexity: 4); shape_outer_disc()
 
-    color(color: [ 0.7, 0.7, 1 ]) {
+    color(c: [ 0.7, 0.7, 1 ]) {
       [ 0, 120, 240 ].each do |alpha|
         rotate(a: alpha)
         translate(v: [ 0, @thickness*2 + @locklen1 + @inner1_to_inner2 + @boltlen + @midhole, 1.5*@thickness ])

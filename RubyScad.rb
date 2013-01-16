@@ -1,9 +1,21 @@
 require 'matrix'
 
-module RubyScad
-  VERSION = 1.0
+class Numeric
+  def radians
+    self * Math::PI / 180
+  end
+end
 
+class Float
   FP_P = 3
+  def to_s
+    "%.#{FP_P}f" % self.round(FP_P)
+  end
+end
+
+module RubyScad
+  VERSION = "1.0"
+
   START_BLOCK = "{"
   END_BLOCK = "}"
   TAB_SIZE = 3
@@ -41,9 +53,9 @@ module RubyScad
   INCLUDE_STR = "include <%<file>s>"
   USE_STR = "use <%<file>s>"
   ECHO_STR = "echo(%<string>s);"
-  FA_STR = "$FA = %<value>s;"
-  FS_STR = "$FS = %<value>s;"
-  FN_STR = "$FN = %<value>s;"
+  FA_STR = "$fa = %<value>s;"
+  FS_STR = "$fs = %<value>s;"
+  FN_STR = "$fn = %<value>s;"
 
   def fa(value)
     format_output FA_STR % {value: value}
@@ -65,8 +77,8 @@ module RubyScad
     format_output USE_STR % {file: file}
   end
 
-  def echo(args={})
-    format_output ECHO_STR % {string: args}
+  def echo(*args)
+    format_output ECHO_STR % {string: args.join(', ')}
   end
 
   def projection(args={}, &block)
@@ -74,13 +86,13 @@ module RubyScad
   end
   
   def linear_extrude(args={}, &block)
-    str_end = args.include?(:file) == "" ? "" : ";"
+    str_end = args.include?(:file) ? ";" : ""
     format_command LINEAR_EXTRUDE_STR.concat(str_end), args, &block
   end
 
   def rotate_extrude(args={}, &block)
-    str_end = args.include?(:file) == "" ? "" : ";"
-    format_block ROTATE_EXTRUDE_STR.concat(str_end), args, &block
+    str_end = args.include?(:file) ? ";" : ""
+    format_command ROTATE_EXTRUDE_STR.concat(str_end), args, &block
   end
 
   def import(args={})
@@ -147,8 +159,8 @@ module RubyScad
     format_command POLYHEDRON_STR, args
   end
 
-  def square(*args, options)
-    format_command SQUARE_STR, args, options
+  def square(args={})
+    format_command SQUARE_STR, args
   end
 
   def circle(args={})
@@ -215,8 +227,6 @@ module RubyScad
   def format_value(var)
     if var.is_a?(Vector) or var.is_a?(Matrix)
       return var.to_a.to_s
-    elsif var.is_a? Float
-      return "%.#{FP_P}f" % var
     elsif var.is_a? String
       return '"' + var + '"'
     else
@@ -230,7 +240,7 @@ module RubyScad
 
   def vector_input(args, element)
     unless args.include?(element)
-      args[element] = [args.fetch(:x, 0.0), args.fetch(:y, 0.0)]
+      args[element] = [args.fetch(:x, 0), args.fetch(:y, 0)]
       args[element].push(args[:z]) if args.include?(:z)
       delete_from(args, :x, :y, :z)
     end
@@ -337,17 +347,5 @@ module RubyScad
 
   def dxf_dim(args={})
     return 0.0
-  end
-end
-
-class Numeric
-  def radians
-    self * Math::PI / 180
-  end
-end
-
-class Float
-  def to_s
-    "%.#{FP_P}f" % self.round(FP_P)
   end
 end
