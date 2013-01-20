@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.version     = RubyScad::VERSION
   s.authors     = ["Curtis Bissonnette"]
   s.email       = ["cjbissonnette"]
-  s.homepage    = "http://github.com/cjbissonnette"
+  s.homepage    = "http://github.com/cjbissonnette/RubyScad"
   s.summary     = "Ruby module to easily generate openscad scripts"
   s.description = "Ruby module to easily generate openscad scripts"
 
