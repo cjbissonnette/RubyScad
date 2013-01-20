@@ -1,4 +1,4 @@
-load "../RubyScad.rb"
+require "rubyscad"
 
 # example016.stl is derived from Mblock.stl
 # (c) 2009 Will Langford licensed under

@@ -1,4 +1,4 @@
-load "../RubyScad.rb"
+require "rubyscad"
 require 'matrix'
 
 module Example022

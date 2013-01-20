@@ -1,4 +1,4 @@
-load "BasicCube.rb"
+load 'BasicCube.rb'
 
 class ChamferCube < BasicCube
 

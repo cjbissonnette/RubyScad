@@ -1,4 +1,4 @@
-load "../RubyScad.rb"
+require 'rubyscad'
 
 class Example001
   include RubyScad

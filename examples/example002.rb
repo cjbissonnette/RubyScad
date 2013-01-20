@@ -1,4 +1,4 @@
-load "../RubyScad.rb"
+require 'rubyscad'
 
 module Example002
   extend RubyScad
