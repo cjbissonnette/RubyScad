@@ -14,8 +14,6 @@ class Float
 end
 
 module RubyScad
-  VERSION = "1.0"
-
   START_BLOCK = "{"
   END_BLOCK = "}"
   TAB_SIZE = 3
