@@ -4,422 +4,320 @@ RubyScad
 Ruby module to easily generate openscad scripts
 
 General Usage
+-------------
 
 Requirements: Ruby 1.9.3
+Installation: `gem install rubyscad`
 
 RubyScad is a ruby mixin module which provides functions which allow easy output of openscad scripts .  To use simply "include" or "extend" the module into any class or module:
 
+    require "rubyscad"
 
-  --------------------------------test.rb--------------------------------------
+    module Test
 
-  load "RubyScad.rb" #or use require but it must be in ruby's system path
+      extend RubyScad
 
-  
+      def self.cone(base=5, height=10)
 
-  module Test
+        cylinder(r1: base, r2: 0, h:height)
 
-    extend RubyScad #extend makes all function available at the class level
+      end
 
-    
-
-    def self.cone(base=5, height=10)
-
-      cylinder(r1: base, r2: 0, h:height)
-
+      cone(2, 4)
     end
 
-    
-
-    cone(2, 4)
-
-  end
-
-  ----------------------------------------------------------------------------
+---
 
   from command line: 
 
-  print to standard output: ruby test.rb
+  print to standard output: `ruby test.rb`
 
-  generate file: ruby test.rb "test.scad"
+  generate file: `ruby test.rb "test.scad"`
 
-  --------------------------------test2.rb------------------------------------
+---
 
-  load "RubyScad.rb" #or use require but it must be in ruby's system path
+    require "rubyscad"
 
-  
+    class Test2
 
-  class Test2
+      include RubyScad
 
-    include RubyScad #includ makes function available within the class/module
+      def initialize(args={})
+        @radius = args.fetch(:radius, 3)
+      end
 
-    
-
-    def initialize(args={})
-
-      @radius = args.fetch(:radius, 3)
-
+      def render()
+        sphere(r:@radius)
+      end
     end
 
-    
+    Test2.new.render
 
-    def render()
+---
 
-      sphere(r:@radius)
+  print to standard output: `ruby test2.rb`
 
-    end
+  generate file: `ruby test2.rb "test2.scad"`
 
-  end
+General Considerations
+-----------------------
 
+- All arguments are passed as named hash values matching the openscad spec, exceptions are for functions fa, fs, fn, echo, include, and use (see below).  
+  openscad: `cube(6)`  
+  rubyscad: `cube(size: 6)`
+- Any hash values may be passed to functions (with the exception of the ones noted above) but openscad may or may not use these values  
+  *cube(openscadwontusethis: 5)* will produce *cube(openscadwontusethis = 5);*
+  nothing bad will happen here, the value will just have no effect
+- $fn, $fs, $fa variables are passed without the '$'  
+  openscad: `sphere(4, $fn=12)`  
+  rubyscad: `sphere(r: 4, fn: 12)`
+- Ruby's math functions use radians, openscad uses degrees, for ease I've added a 'radians' function to the numeric class so the following is possible:  
+  openscad: sin(15)  
+  rubyscad: Math.sin(15.radians)
+- All functions which take code blocks (union, difference, intersection, ...) can use the form "function() { code }" or "function()" with the following result:  
+  the code:  
   
-
-  Test2.new.render
-
-  ----------------------------------------------------------------------------
-
-  from command line: 
-
-  print to standard output: ruby test2.rb
-
-  generate file: ruby test2.rb "test2.scad"
-
-  
-
-
-
-General Considerations:
-
-    -All arguments passed to rubyscad functions are passed as named hash values matching the openscad spec, exceptions are for functions fa, fs, fn, echo, include, and use (see below).
-
-      openscad: cube(6)
-
-      rubyscad: cube(size: 6)
-
-    -Any arguments may be passed to functions (with the exception of the ones noted above) but openscad may or may not use these values
-
-      -cube(openscadwontusethis: 5) will produce the following openscad
-
-         -cube(openscadwontusethis = 5);
-
-        nothing bad will happen here, the value will just have no effect
-
-    -$fn, $fs, $fa variables are passed without the '$'
-
-      openscad: sphere(4, $fn=12)
-
-      rubyscad: sphere(r: 4, fn: 12)
-
-    -Ruby's math functions use radians, openscad uses degrees, for ease I've added a 'radians' function to the numeric class so the following is possible
-
-      openscad: sin(15)
-
-      rubyscad: Math.sin(15.radians)
-
-    -All functions which take code blocks (union, difference, intersection, ...) can use the form "function() { code }" or "function()" with the following result
-
-      the code:
-
         translate(x: 5)
-
         cube(size: 7)
 
-      would produce:
+  would produce:
 
         translate([5,0,0])
-
         cube(size = 7);
 
-      the code
+  the code:
 
         translate(x: 5) {
-
           cube(size: 7)
-
         }
 
-      would produce:
+  would produce:
 
         translate([5,0,0]) {
-
           cube(size = 7);
-
         }
 
-        
-
 Openscad Functions:      
+-------------------
+
+  openscad: `$fa = 0.2;`  
+  rubyscad: `fa 0.2`
 
 ----------------------------------------------------------------------------
 
-  openscad: $fa = 0.2;
-
-  rubyscad: fa 0.2
-
-----------------------------------------------------------------------------
-
-  openscad: $fs = 2;
-
-  rubyscad: fs 2
+  openscad: `$fs = 2;`  
+  rubyscad: `fs 2`
 
 ----------------------------------------------------------------------------
 
-  openscad: $fn = 5;
-
-  rubyscad: fn 5
-
-----------------------------------------------------------------------------
-
-  openscad: include <file.scad>
-
-  rubyscad: include_scad "file.scad"
+  openscad: `$fn = 5;`  
+  rubyscad: `fn 5`
 
 ----------------------------------------------------------------------------
 
-  openscad: use <file.scad>
-
-  rubyscad: use "file.scad"
-
-----------------------------------------------------------------------------
-
-  openscad: echo(1,2,3);
-
-  rubyscad: echo 1, 2, 3
+  openscad: `include <file.scad>`  
+  rubyscad: `include_scad "file.scad"`
 
 ----------------------------------------------------------------------------
 
-  openscad: %
-
-  rubyscad: background
-
-----------------------------------------------------------------------------
-
-  openscad: #
-
-  rubyscad: debug
+  openscad: `use <file.scad>`  
+  rubyscad: `use "file.scad"`
 
 ----------------------------------------------------------------------------
 
-  openscad: !
-
-  rubyscad: root
-
-----------------------------------------------------------------------------
-
-  openscad: *
-
-  rubyscad: disable
+  openscad: `echo(1,2,3);`  
+  rubyscad: `echo 1, 2, 3`
 
 ----------------------------------------------------------------------------
 
-  openscad: projection([args]) [{ code }]
-
-  rubyscad: projection([args]) [{ code }]
-
-----------------------------------------------------------------------------
-
-  openscad: linear_extrude([args]) [{ code }]
-
-  rubyscad: linear_extrude([args]) [{ code }]
+  openscad: `%`  
+  rubyscad: `background`
 
 ----------------------------------------------------------------------------
 
-  openscad: rotate_extrude([args]) [{ code }]
-
-  rubyscad: rotate_extrude([args]) [{ code }]
-
-----------------------------------------------------------------------------
-
-  openscad: import([args])
-
-  rubyscad: import([args])
+  openscad: `#`  
+  rubyscad: `debug`
 
 ----------------------------------------------------------------------------
 
-  openscad: difference() { code }
-
-  rubyscad: difference() { code }
-
-----------------------------------------------------------------------------
-
-  openscad: union() { code }
-
-  rubyscad: union() { code }
+  openscad: `!`  
+  rubyscad: `root`
 
 ----------------------------------------------------------------------------
 
-  openscad: intersection() { code }
-
-  rubyscad: intersection() { code }
-
-----------------------------------------------------------------------------
-
-  openscad: render([args]) [{ code }]
-
-  rubyscad: render([args]) [{ code }]
+  openscad: `*`  
+  rubyscad: `disable`
 
 ----------------------------------------------------------------------------
 
-  openscad: minkowski() { code }
-
-  rubyscad: minkowski() { code }
-
-----------------------------------------------------------------------------
-
-  openscad: hull() { code }
-
-  rubyscad: hull() { code }
+  openscad: `projection([args]) [{ code }]`  
+  rubyscad: `projection([args]) [{ code }]`
 
 ----------------------------------------------------------------------------
 
-  openscad: cube([args])
-
-  rubyscad: cube([args])
-
-----------------------------------------------------------------------------
-
-  openscad: sphere([args])
-
-  rubyscad: sphere([args])
-
-  In addition to the normal arguments d: can also be provided instead of r: to
-
-  specify the diameter instead of the radius
+  openscad: `linear_extrude([args]) [{ code }]`  
+  rubyscad: `linear_extrude([args]) [{ code }]`
 
 ----------------------------------------------------------------------------
 
-  openscad: polyhedron([args])
-
-  rubyscad: polyhedron([args])
-
-----------------------------------------------------------------------------
-
-  openscad: square([args])
-
-  rubyscad: square([args])
+  openscad: `rotate_extrude([args]) [{ code }]`  
+  rubyscad: `rotate_extrude([args]) [{ code }]`
 
 ----------------------------------------------------------------------------
 
-  openscad: circle([args])
-
-  rubyscad: circle([args])
-
-  In addition to the normal arguments d: can also be provided instead of r: to
-
-  specify the diameter instead of the radius
+  openscad: `import([args])`  
+  rubyscad: `import([args])`
 
 ----------------------------------------------------------------------------
 
-  openscad: polygon([args])
-
-  rubyscad: polygon([args])
-
-----------------------------------------------------------------------------
-
-  openscad: surface([args])
-
-  rubyscad: surface([args])
+  openscad: `difference() { code }`  
+  rubyscad: `difference() { code }`
 
 ----------------------------------------------------------------------------
 
-  openscad: cylinder([args])
-
-  rubyscad: cylinder([args])
-
-----------------------------------------------------------------------------
-
-  openscad: rotate([args]) [{ code }]
-
-  rubyscad: rotate([args]) [{ code }]
-
-  In addition to the normal arguments x:, y:, and z: can be used instead of 
-
-  the normal vector input
+  openscad: `union() { code }`  
+  rubyscad: `union() { code }`
 
 ----------------------------------------------------------------------------
 
-  openscad: translate([args]) [{ code }]
-
-  rubyscad: translate([args]) [{ code }]
-
-  In addition to the normal arguments x:, y:, and z: can be used instead of 
-
-  the normal vector input
+  openscad: `intersection() { code }`  
+  rubyscad: `intersection() { code }`
 
 ----------------------------------------------------------------------------
 
-  openscad: scale([args]) [{ code }]
-
-  rubyscad: scale([args]) [{ code }]
-
-  In addition to the normal arguments x:, y:, and z: can be used instead of 
-
-  the normal vector input
+  openscad: `render([args]) [{ code }]`  
+  rubyscad: `render([args]) [{ code }]`
 
 ----------------------------------------------------------------------------
 
-  openscad: mirror([args]) [{ code }]
-
-  rubyscad: mirror([args]) [{ code }]
-
-  In addition to the normal arguments x:, y:, and z: can be used instead of 
-
-  the normal vector input
+  openscad: `minkowski() { code }`  
+  rubyscad: `minkowski() { code }`
 
 ----------------------------------------------------------------------------
 
-  openscad: multmatrix([args]) [{ code }]
-
-  rubyscad: multmatrix([args]) [{ code }]
+  openscad: `hull() { code }`  
+  rubyscad: `hull() { code }`
 
 ----------------------------------------------------------------------------
 
-  openscad: color([args]) [{ code }]
+  openscad: `cube([args])`  
+  rubyscad: `cube([args])`
 
-  rubyscad: color([args]) [{ code }]
+----------------------------------------------------------------------------
 
-  Instead of color: being a vector, r:, g:, b:, and a: can be provided
+  openscad: `sphere([args])`  
+  rubyscad: `sphere([args])`  
 
-  
+* In addition to the normal arguments d: can also be provided instead of r: to specify the diameter instead of the radius
+
+----------------------------------------------------------------------------
+
+  openscad: `polyhedron([args])`  
+  rubyscad: `polyhedron([args])`
+
+----------------------------------------------------------------------------
+
+  openscad: `square([args])`  
+  rubyscad: `square([args])`
+
+----------------------------------------------------------------------------
+
+  openscad: `circle([args])`  
+  rubyscad: `circle([args])`
+
+* In addition to the normal arguments d: can also be provided instead of r: to specify the diameter instead of the radius
+
+----------------------------------------------------------------------------
+
+  openscad: `polygon([args])`  
+  rubyscad: `polygon([args])`
+
+----------------------------------------------------------------------------
+
+  openscad: `surface([args])`  
+  rubyscad: `surface([args])`
+
+----------------------------------------------------------------------------
+
+  openscad: `cylinder([args])`  
+  rubyscad: `cylinder([args])`
+
+----------------------------------------------------------------------------
+
+  openscad: `rotate([args]) [{ code }]`  
+  rubyscad: `rotate([args]) [{ code }]`
+
+* In addition to specifying a: as a vector x:, y:, and z: can be used instead
+
+----------------------------------------------------------------------------
+
+  openscad: `translate([args]) [{ code }]`  
+  rubyscad: `translate([args]) [{ code }]`
+
+* In addition to specifying v: as a vector x:, y:, and z: can be used instead
+
+----------------------------------------------------------------------------
+
+  openscad: `scale([args]) [{ code }]`  
+  rubyscad: `scale([args]) [{ code }]`
+
+* In addition to specifying v: as a vector x:, y:, and z: can be used instead
+
+----------------------------------------------------------------------------
+
+  openscad: `mirror([args]) [{ code }]`  
+  rubyscad: `mirror([args]) [{ code }]`
+
+* In addition to specifying v: as a vector x:, y:, and z: can be used instead
+
+----------------------------------------------------------------------------
+
+  openscad: `multmatrix([args]) [{ code }]`  
+  rubyscad: `multmatrix([args]) [{ code }]`
+
+----------------------------------------------------------------------------
+
+  openscad: `color([args]) [{ code }]`  
+  rubyscad: `color([args]) [{ code }]`
+
+* Instead of color: being defined, r:, g:, b:, and a: can be provided
 
 RubyScad Functions:
+-------------------
+
+`format_command(cmd_str, args={}, &block)`
+
+* an easy way to implement new openscad commands.
+* cmd\_str should be in the form "func\_name(%&lt;args&gt;);"
+* all arguments passed from "args" will be inserted into the <args> string modifier
+* if a block is passed it will output between { }
 
 ----------------------------------------------------------------------------
 
-  format_command(cmd_str, args={}, &block)
+`new_line`
 
-    an easy way to implement new openscad commands.
-
-    cmd_str should be in the form "func_name(%<args>);"
-
-    all arguments passed from "args" will be inserted into the <args> string modifier, if
-
-    a block is passed it will output between { }
+* outputs a new line
 
 ----------------------------------------------------------------------------
 
-  new_line
+`start_block`
 
-    outputs a new line
-
-----------------------------------------------------------------------------
-
-  start_block
-
-    outputs a { at the correct tab level
+* outputs a '{' at the correct tab level
 
 ----------------------------------------------------------------------------
 
-  end_block
+`end_block`
 
-    outputs a } at the correct tab level
-
-----------------------------------------------------------------------------
-
-  end_all_blocks
-
-    outputs a } for every open block
+* outputs a '}' at the correct tab level
 
 ----------------------------------------------------------------------------
 
-  format_output
+`end_all_blocks`
 
-    outputs a string at the correct tab level
+* outputs a '}' for every open block
+
+----------------------------------------------------------------------------
+
+`format_output`
+
+* outputs a string at the correct tab level
