@@ -297,7 +297,6 @@ module RubyScad
   end
 
   def self.start_output
-    @@output_file = nil
     if ARGV[0] && ARGV[0].include?(".scad")
       @@output_file = ARGV[0]
       ARGV.shift
@@ -311,7 +310,6 @@ module RubyScad
 
   def self.extended(mod)
     start_output
-    mod.class_variable_set(:@@fa, 30)
   end
 
   def self.included(mod)
