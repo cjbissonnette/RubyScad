@@ -179,6 +179,18 @@ module RubyScad
   end
 
   def cylinder(args={})
+    if args.include?(:d)
+      args[:r] = args[:d]/2.0
+      args.delete(:d)
+    end
+    if args.include?(:d1)
+      args[:r1] = args[:d1]/2.0
+      args.delete(:d1)
+    end
+    if args.include?(:d2)
+      args[:r2] = args[:d2]/2.0
+      args.delete(:d2)
+    end
     format_command CYLINDER_STR, args
   end
 
