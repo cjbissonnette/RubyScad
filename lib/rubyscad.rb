@@ -1,2 +1,2 @@
 require 'rubyscad/version'
-require 'RubyScad'
+require 'rubyscad/RubyScad'
