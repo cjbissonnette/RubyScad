@@ -219,13 +219,17 @@ module RubyScad
   end
 
   def color(args={}, &block)
-    args[:color] = [args.fetch(:r, 0), args.fetch(:g, 0), args.fetch(:b, 0), args.fetch(:a, 1)] unless args.include?(:color)
+    args[:color] = [args.fetch(:r, 0), args.fetch(:g, 0), args.fetch(:b, 0), args.fetch(:a, 1)].to_s unless args.include?(:color)
     delete_from(args, :r, :g, :b, :a)
-    format_command COLOR_STR, args, &block
+    format_command(COLOR_STR, args[:color], &block)
   end
 
   def format_command(cmd_str, args={}, &block)
-    arg_str = args.collect { |k, v| "#{format_key(k)} = #{format_value(v)}" }.join(', ')
+    unless args.kind_of? String
+        arg_str = args.collect { |k, v| "#{format_key(k)} = #{format_value(v)}" }.join(', ')
+    else
+        arg_str = args
+    end
     format_block cmd_str % {args: arg_str}, &block
   end
   
