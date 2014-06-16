@@ -229,11 +229,14 @@ module RubyScad
   end
 
   def format_command(cmd_str, args={}, &block)
-    unless args.kind_of? String
-        arg_str = args.collect { |k, v| "#{format_key(k)} = #{format_value(v)}" }.join(', ')
+    if args.kind_of? String
+      arg_str = args
+    elsif [Array, Vector, Matrix].any? { |klass| args.is_a? klass }
+      arg_str = format_value(args)
     else
-        arg_str = args
+      arg_str = args.collect { |k, v| "#{format_key(k)} = #{format_value(v)}" }.join(', ')
     end
+
     format_block cmd_str % {args: arg_str}, &block
   end
   
@@ -258,6 +261,7 @@ module RubyScad
   end
 
   def vector_input(args, element)
+    return unless args.is_a? Hash
     unless args.include?(element)
       args[element] = [args.fetch(:x, 0), args.fetch(:y, 0)]
       args[element].push(args[:z]) if args.include?(:z)

@@ -64,7 +64,14 @@ General Considerations
 
 - All arguments are passed as named hash values matching the openscad spec, exceptions are for functions fa, fs, fn, echo, include, and use (see below).  
   openscad: `cube(6)`  
-  rubyscad: `cube(size: 6)`
+  rubyscad: `cube(size: 6)`  
+- It is however possible to use ruby arrays (or vectors and even matrices) as an argument instead of a hash as a shortcut.  
+  The following 4 snippets produce identical output.  
+  openscad:  `cube(size = [6,6,12]);`  
+  rubyscad:  `cube(size: [6,6,12])`  
+  openscad:  `cube([6,6,12]);`  
+  rubyscad:  `cube([6,6,12])`  
+  Please notice though that Rubyscad doesn't check if the code with an array as argument is valid openscad code, eg. `cylinder([10,10,5])` becomes `cylinder([10, 10, 5]);`, which is nonsense openscad code.  
 - Any hash values may be passed to functions (with the exception of the ones noted above) but openscad may or may not use these values  
   *cube(openscadwontusethis: 5)* will produce *cube(openscadwontusethis = 5);*
   nothing bad will happen here, the value will just have no effect
